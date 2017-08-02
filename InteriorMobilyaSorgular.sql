@@ -1,5 +1,5 @@
 
---3.	Müşteri Id alarak, bu müşterinin geçmiş siparişlerine ve diğer müşterilerin siparişlerine bakarak bir ürün öneri procedure’ü yazınız. 
+--3.	MÃ¼Ã¾teri Id alarak, bu mÃ¼Ã¾terinin geÃ§miÃ¾ sipariÃ¾lerine ve diÃ°er mÃ¼Ã¾terilerin sipariÃ¾lerine bakarak bir Ã¼rÃ¼n Ã¶neri procedureâ€™Ã¼ yazÃ½nÃ½z. 
 Create Proc MusteriSiparis (@MusteriID int)
 As
 
@@ -16,11 +16,11 @@ From SiparisDetay sd where SiparisID in (Select SiparisID from Siparis where Ali
 )))tb1)tb2
 where Sira=1
 
---Müşterinin sehirlerini aldıktan sonra siparişlere bakarak bu sehirden diğer musteriler en çok hangi ürünleri sipariş etmiş gördükten sonra bu ürünleri önerebiliriz.
+--MÃ¼Ã¾terinin sehirlerini aldÃ½ktan sonra sipariÃ¾lere bakarak bu sehirden diÃ°er musteriler en Ã§ok hangi Ã¼rÃ¼nleri sipariÃ¾ etmiÃ¾ gÃ¶rdÃ¼kten sonra bu Ã¼rÃ¼nleri Ã¶nerebiliriz.
 
 
---4.	Bu database üzerinde aşağıdaki RDL raporlarını hazırlayınız.  *
---a.	Toplam ücret olarak ortalama satış miktarının üzerine çıkan satışlarımdan ilk 50 sine ait ürünleri listeleyiniz.
+--4.	Bu database Ã¼zerinde aÃ¾aÃ°Ã½daki RDL raporlarÃ½nÃ½ hazÃ½rlayÃ½nÃ½z.  *
+--a.	Toplam Ã¼cret olarak ortalama satÃ½Ã¾ miktarÃ½nÃ½n Ã¼zerine Ã§Ã½kan satÃ½Ã¾larÃ½mdan ilk 50 sine ait Ã¼rÃ¼nleri listeleyiniz.
 
 Select top 50 UrunAdi,Toplam From
 (Select (Select UrunAdi From Urun where UrunID in (Select UrunID from Paketleme where PaketID in (Select PaketID from Siparis where SiparisID=sd.SiparisID))) UrunAdi,(Select Sum(sd.Fiyat*Adet*(1-Indirim)) Over(partition by (Select UrunAdi From Urun where UrunID in (Select UrunID from Paketleme where PaketID in (Select PaketID from Siparis where SiparisID=sd.SiparisID))) ) From Paketleme where PaketID in (Select PaketID from Siparis where SiparisID=sd.SiparisID) ) Toplam From SiparisDetay sd 
@@ -30,26 +30,33 @@ join SiparisDetay sd on s.SiparisID=sd.SiparisID
 join Paketleme p on s.PaketID=p.PaketID))tb1
 order by toplam desc
 
---b.	Adet olarak en çok satın alınan ürünü satın alan müşterilerin ülkelerine hangi yıllarda kaç adet ürün satışı yapılmıştır?
+--b.	Adet olarak en Ã§ok satÃ½n alÃ½nan Ã¼rÃ¼nÃ¼ satÃ½n alan mÃ¼Ã¾terilerin Ã¼lkelerine hangi yÃ½llarda kaÃ§ adet Ã¼rÃ¼n satÃ½Ã¾Ã½ yapÃ½lmÃ½Ã¾tÃ½r?
 
 Select 
-(Select Ad+' '+Soyad   From Bireysel where MusteriID in (Select MusteriID from Musteri where MusteriID=s.MusteriID)) BireyselMusteri,(Select SirketAdi   From Kurumsal where MusteriID in (Select MusteriID from Musteri where MusteriID=s.MusteriID)) KurumsalMusteri,(Select UlkeAdi From Ulke where UlkeID in (Select UlkeID from Sehir where SehirID=s.AliciSehirID)) UlkeAdi,Year(s.SiparisTarihi) Yıl,(Select Sum(Adet)  From Paketleme where PaketID=s.PaketID) Toplam From Siparis s where s.PaketID in (Select PaketID from Paketleme where UrunID in (Select UrunID from Urun where UrunAdi=(Select UrunAdi From
+(Select Ad+' '+Soyad   From Bireysel where MusteriID in (Select MusteriID from Musteri where MusteriID=s.MusteriID)) BireyselMusteri,(Select SirketAdi   From Kurumsal where MusteriID in (Select MusteriID from Musteri where MusteriID=s.MusteriID)) KurumsalMusteri,(Select UlkeAdi From Ulke where UlkeID in (Select UlkeID from Sehir where SehirID=s.AliciSehirID)) UlkeAdi,Year(s.SiparisTarihi) YÃ½l,(Select Sum(Adet)  From Paketleme where PaketID=s.PaketID) Toplam From Siparis s where s.PaketID in (Select PaketID from Paketleme where UrunID in (Select UrunID from Urun where UrunAdi=(Select UrunAdi From
 (Select distinct Top 1 u.UrunAdi,Sum(p.Adet) Over(partition by u.UrunAdi) Sayi From Siparis s join Paketleme p on s.PaketID=p.PaketID
 join Urun u on p.UrunID=u.UrunID
 order by Sayi desc)tb1)))
 
---c.	Adet olarak toplam 100 ün üzerinde ürün satılmış hangi kategorilerden, hangi ülkelere ücret olarak toplam ne kadarlık satış yapılmıştır?
+--c.	Adet olarak toplam 100 Ã¼n Ã¼zerinde Ã¼rÃ¼n satÃ½lmÃ½Ã¾ hangi kategorilerden, hangi Ã¼lkelere Ã¼cret olarak toplam ne kadarlÃ½k satÃ½Ã¾ yapÃ½lmÃ½Ã¾tÃ½r?
 
-Select (Select UlkeAdi From Ulke where UlkeID in (Select UlkeID from Sehir where SehirID in(Select AliciSehirID from Siparis where SiparisID=sd.SiparisID))) Ulke,(Select Sum(sd.Fiyat*Adet*(1-sd.Indirim)) Over(partition by (Select UlkeAdi From Ulke where UlkeID in (Select UlkeID from Sehir where SehirID in(Select AliciSehirID from Siparis where SiparisID=sd.SiparisID))) ) From Paketleme where PaketID in (select PaketID from Siparis where SiparisID=sd.SiparisID)) ToplamFiyat From SiparisDetay sd where SiparisID in (select SiparisID from Siparis where PaketID in (Select PaketID from Paketleme where UrunID in (Select UrunID from Urun where KategoriID in (select KategoriID from Kategori where KategoriAdi in ((Select KategoriAdi from 
+Select u.UlkeAdi,k.KategoriAdi,Sum(sd.Fiyat*Adet*(1-sd.Indirim)) ToplamFiyat From SiparisDetay sd join Siparis s on sd.SiparisID=s.SiparisID
+join Sehir ss on ss.SehirID=s.AliciSehirID
+join Ulke u on ss.UlkeID=u.UlkeID
+join Paketleme p on s.PaketID=p.PaketID
+join Urun uu on p.UrunID=uu.UrunID
+join Kategori k on uu.KategoriID=k.KategoriID
+where k.KategoriAdi in ((Select KategoriAdi from 
 (Select distinct k.KategoriAdi,Sum(Adet) over(partition by k.KategoriAdi) Toplam from Siparis s join Paketleme p on s.PaketID=p.PaketID
 join urun u on p.UrunID=u.UrunID
 join Kategori k on k.KategoriID=u.KategoriID )tb1
-where Toplam>100))))))
+where Toplam>100))
+Group by  u.UlkeAdi,k.KategoriAdi
 
---d.	Hangi ülkelere hangi ürünler için kaç kere satış sonrası desteği sağlanmıştır?
+--d.	Hangi Ã¼lkelere hangi Ã¼rÃ¼nler iÃ§in kaÃ§ kere satÃ½Ã¾ sonrasÃ½ desteÃ°i saÃ°lanmÃ½Ã¾tÃ½r?
 Select distinct u.UlkeAdi,uu.UrunAdi,Count(d.DestekID) over(partition by u.UlkeAdi,uu.UrunAdi) Adet From Destek d join SiparisDetay sd on d.SiparisDetayID=sd.SiparisDetayID join Siparis s on sd.SiparisID=s.SiparisID join Sehir ss on ss.SehirID=s.AliciSehirID join Ulke u on ss.UlkeID=u.UlkeID
 join Paketleme p on s.PaketID=p.PaketID join Urun uu on p.UrunID=uu.UrunID
 
---e.	Şimdiye kadar hiç yerinde kurulum yapılmamış ürünlerden hangi yıl ücret olarak ortalama ne kadar satış yapılmıştır?
+--e.	Ãimdiye kadar hiÃ§ yerinde kurulum yapÃ½lmamÃ½Ã¾ Ã¼rÃ¼nlerden hangi yÃ½l Ã¼cret olarak ortalama ne kadar satÃ½Ã¾ yapÃ½lmÃ½Ã¾tÃ½r?
 
 Select (Select UrunAdi from Urun where UrunID in(select UrunID from Paketleme where PaketID in (select PaketID from Siparis where SiparisID=sd.SiparisID))) UrunAdi,(Select year(SiparisTarihi) from Siparis where SiparisID=sd.SiparisID) SiparisYili,(Select AVG(sd.Fiyat*Adet*(1-sd.Indirim)) over(partition by (Select year(SiparisTarihi) from Siparis where SiparisID=sd.SiparisID) ) From Paketleme where PaketID in(select paketID from Siparis where SiparisID=sd.SiparisID)) OrtalamaUcret From SiparisDetay sd where SiparisDetayID not in (Select SiparisDetayID From Destek)
